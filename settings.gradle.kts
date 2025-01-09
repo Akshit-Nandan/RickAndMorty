@@ -15,5 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "RickAndMorty"
 include(":app")
-include(":mylibrary")
 include(":network")

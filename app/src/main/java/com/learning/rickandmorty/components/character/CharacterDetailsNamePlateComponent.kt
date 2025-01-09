@@ -30,7 +30,7 @@ fun CharacterDetailsNamePlateComponent(name: String, status: CharacterStatus) {
 
 @Preview
 @Composable
-internal fun CharacterDetailsNamePlateComponentPreview() {
+private fun CharacterDetailsNamePlateComponentPreview() {
     CharacterDetailsNamePlateComponent(name = "Rick Sanchez",
         status = CharacterStatus.Alive)
 }

@@ -34,6 +34,7 @@ import com.learning.network.models.remote.toDomainCharacter
 import com.learning.rickandmorty.components.character.CharacterDetailsNamePlateComponent
 import com.learning.rickandmorty.components.common.DataPoint
 import com.learning.rickandmorty.components.common.DataPointComponent
+import com.learning.rickandmorty.components.common.LoadingState
 import com.learning.rickandmorty.ui.theme.RickAction
 import kotlinx.coroutines.delay
 
@@ -41,6 +42,7 @@ import kotlinx.coroutines.delay
 fun CharacterDetailsScreen(
     ktorClient: KtorClient,
     characterId: Int,
+    onEpisodeClicked : (Int) -> Unit,
 ) {
     var character by remember { mutableStateOf<Character?>(null) }
 
@@ -131,6 +133,7 @@ fun CharacterDetailsScreen(
                 fontSize = 18.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 32.dp)
                     .border(
                         width = 1.dp,
@@ -138,19 +141,11 @@ fun CharacterDetailsScreen(
                         shape = RoundedCornerShape(12.dp)
                     )
                     .clip(RoundedCornerShape(12.dp))
-                    .clickable { }
+                    .clickable {
+                        onEpisodeClicked(characterId)
+                    }
                     .padding(vertical = 8.dp)
             )
         }
     }
-}
-
-@Composable
-private fun LoadingState() {
-    CircularProgressIndicator(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 128.dp),
-        color = RickAction,
-    )
 }
