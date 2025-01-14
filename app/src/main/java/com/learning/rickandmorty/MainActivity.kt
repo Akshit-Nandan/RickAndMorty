@@ -33,6 +33,7 @@ import com.learning.network.KtorClient
 import com.learning.network.Test
 import com.learning.rickandmorty.screens.CharacterDetailsScreen
 import com.learning.rickandmorty.screens.CharacterEpisodeScreen
+import com.learning.rickandmorty.screens.HomeScreen
 import com.learning.rickandmorty.ui.theme.RickAndMortyTheme
 import com.learning.rickandmorty.ui.theme.RickPrimary
 import dagger.hilt.android.AndroidEntryPoint
@@ -46,7 +47,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var ktorClient : KtorClient
+    lateinit var ktorClient: KtorClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,17 +62,36 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = RickPrimary
                 ) {
-                    NavHost(navController = navController, startDestination = "character_details") {
-                        composable("character_details") { CharacterDetailsScreen(
-                            characterId = 4,
-                        ) {
-                            navController.navigate("character_episodes/$it")
-                        } }
-                        composable("character_episodes/{character_Id}",
-                            arguments = listOf(navArgument("character_Id"){type = NavType.IntType})
-                        ) {backStackEntry ->
-                            val characterId : Int = backStackEntry.arguments?.getInt("character_Id") ?: -1
-                            CharacterEpisodeScreen(characterId = characterId, ktorClient = ktorClient)
+                    NavHost(navController = navController, startDestination = "home_screen") {
+                        composable(route = "home_screen") {
+                            HomeScreen{ characterId ->
+                                 navController.navigate("character_details/$characterId")
+                            }
+                        }
+                        composable("character_details/{character_Id}", arguments = listOf(
+                            navArgument(name = "character_Id") { type = NavType.IntType }
+                        )) { backStackEntry ->
+
+                            val characterId: Int =
+                                backStackEntry.arguments?.getInt("character_Id") ?: -1
+                            CharacterDetailsScreen(
+                                characterId = characterId,
+                            ) {
+                                navController.navigate("character_episodes/$it")
+                            }
+                        }
+                        composable(
+                            "character_episodes/{character_Id}",
+                            arguments = listOf(navArgument("character_Id") {
+                                type = NavType.IntType
+                            })
+                        ) { backStackEntry ->
+                            val characterId: Int =
+                                backStackEntry.arguments?.getInt("character_Id") ?: -1
+                            CharacterEpisodeScreen(
+                                characterId = characterId,
+                                ktorClient = ktorClient
+                            )
                         }
                     }
 //                    CharacterDetailsScreen(ktorClient = ktorClient, characterId = 1)
@@ -91,7 +111,6 @@ class MainActivity : ComponentActivity() {
         println("Activity is resumed")
     }
 }
-
 
 
 @Composable

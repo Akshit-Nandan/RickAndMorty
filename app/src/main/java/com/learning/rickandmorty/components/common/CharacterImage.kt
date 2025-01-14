@@ -19,7 +19,7 @@ private val defaultModifier = Modifier
     .clip(RoundedCornerShape(12.dp))
 
 @Composable
-fun CharacterImage(imageUrl: String, modifier: Modifier = defaultModifier.background(Color.Red)) {
+fun CharacterImage(imageUrl: String, modifier : Modifier = defaultModifier) {
     SubcomposeAsyncImage(
         model = imageUrl, 
         contentDescription = "This is character Image",
@@ -33,10 +33,6 @@ fun CharacterImage(imageUrl: String, modifier: Modifier = defaultModifier.backgr
 private fun CharacterImagePreview() {
     CharacterImage(
         imageUrl = "image url",
-        modifier = defaultModifier.then(
-            Modifier.background(
-                brush = Brush.verticalGradient(listOf(Color.White, Color.Black))
-            )
-        )
+        modifier = defaultModifier
     )
 }

@@ -9,39 +9,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil3.compose.AsyncImage
 import coil3.compose.SubcomposeAsyncImage
 import com.learning.network.ApiOperation
 import com.learning.network.KtorClient
 import com.learning.network.models.domain.Character
+import com.learning.network.models.domain.CharacterPage
 import com.learning.rickandmorty.components.character.CharacterDetailsNamePlateComponent
-import com.learning.rickandmorty.components.character.CharacterGridItem
-import com.learning.rickandmorty.components.character.CharacterListItem
 import com.learning.rickandmorty.components.common.DataPoint
 import com.learning.rickandmorty.components.common.DataPointComponent
 import com.learning.rickandmorty.components.common.LoadingState
@@ -60,6 +49,9 @@ class CharacterRepository @Inject constructor(private val ktorClient: KtorClient
         return ktorClient.getCharacter(characterId)
     }
 
+    suspend fun fetchCharacterPage(page : Int ) : ApiOperation<CharacterPage> {
+        return ktorClient.getCharacterByPage(pageNumber = page)
+    }
 }
 
 @HiltViewModel
@@ -108,7 +100,7 @@ class CharacterDetailsViewModel @Inject constructor(
             }.onFailure { exception ->
                 _internalStorageFlow.update {
                     return@update CharacterDetailsViewState.Error(
-                        msg = exception.message ?: "Unknown Error"
+                        message = exception.message ?: "Unknown Error"
                     )
                 }
             }
@@ -119,7 +111,7 @@ class CharacterDetailsViewModel @Inject constructor(
 
 sealed interface CharacterDetailsViewState {
     object Loading : CharacterDetailsViewState
-    data class Error(val msg: String) : CharacterDetailsViewState
+    data class Error(val message: String) : CharacterDetailsViewState
     data class Success(
         val character: Character,
         val characterDataPoint: List<DataPoint>,
@@ -159,39 +151,6 @@ fun CharacterDetailsScreen(
             }
 
             is CharacterDetailsViewState.Success -> {
-
-                item {
-                    LazyRow {
-                        repeat(10) {
-                            item {Spacer(Modifier.width(16.dp))}
-                            item {
-                                CharacterGridItem(
-                                    modifier = Modifier,
-                                    character = viewState.character
-                                ) {
-
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {  Spacer(Modifier.height(16.dp)) }
-
-                repeat(10) {
-                    item { Spacer(Modifier.height(16.dp)) }
-                    item {
-                        CharacterListItem(
-                            modifier = Modifier,
-                            character = viewState.character,
-                            characterDataPoints = viewState.characterDataPoint
-                        ) {
-                            
-                        }
-                    }
-                }
-
-                return@LazyColumn
 
                 item {
                     CharacterDetailsNamePlateComponent(

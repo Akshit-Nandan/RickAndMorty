@@ -2,10 +2,13 @@ package com.learning.network
 
 import android.util.Log
 import com.learning.network.models.domain.Character
+import com.learning.network.models.domain.CharacterPage
 import com.learning.network.models.domain.Episode
 import com.learning.network.models.remote.RemoteCharacter
+import com.learning.network.models.remote.RemoteCharacterPage
 import com.learning.network.models.remote.RemoteEpisode
 import com.learning.network.models.remote.toDomainCharacter
+import com.learning.network.models.remote.toDomainCharacterPage
 import com.learning.network.models.remote.toDomainEpisode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -54,6 +57,15 @@ class KtorClient {
         return safeApiCall<List<Episode>> {
             client.get("episode/$idsCommaSeparated").body<List<RemoteEpisode>>()
                 .map { it.toDomainEpisode() }
+        }
+    }
+
+    suspend fun getCharacterByPage(pageNumber : Int) : ApiOperation<CharacterPage> {
+        return safeApiCall {
+            client
+                .get("character/?page=$pageNumber")
+                .body<RemoteCharacterPage>()
+                .toDomainCharacterPage()
         }
     }
 

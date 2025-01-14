@@ -51,7 +51,7 @@ fun CharacterListItem(
                 onClick()
             }
     ) {
-        Box() {
+        Box {
             CharacterImage(
                 imageUrl = character.imageUrl,
                 modifier = Modifier
