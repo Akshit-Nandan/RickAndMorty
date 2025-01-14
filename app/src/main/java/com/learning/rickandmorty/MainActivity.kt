@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -15,7 +16,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,11 +35,18 @@ import com.learning.rickandmorty.screens.CharacterDetailsScreen
 import com.learning.rickandmorty.screens.CharacterEpisodeScreen
 import com.learning.rickandmorty.ui.theme.RickAndMortyTheme
 import com.learning.rickandmorty.ui.theme.RickPrimary
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private  val ktorClient = KtorClient()
+    @Inject
+    lateinit var ktorClient : KtorClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,8 +63,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     NavHost(navController = navController, startDestination = "character_details") {
                         composable("character_details") { CharacterDetailsScreen(
-                            ktorClient = ktorClient,
-                            characterId = 1
+                            characterId = 1,
                         ) {
                             navController.navigate("character_episodes/$it")
                         } }
@@ -67,7 +79,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
+    override fun onPause() {
+        super.onPause()
+        println("Activity is paused")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        println("Activity is resumed")
+    }
 }
+
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
