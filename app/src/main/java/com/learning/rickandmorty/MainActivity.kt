@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     NavHost(navController = navController, startDestination = "character_details") {
                         composable("character_details") { CharacterDetailsScreen(
-                            characterId = 1,
+                            characterId = 4,
                         ) {
                             navController.navigate("character_episodes/$it")
                         } }

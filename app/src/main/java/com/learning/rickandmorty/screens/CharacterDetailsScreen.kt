@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,8 +39,9 @@ import coil3.compose.SubcomposeAsyncImage
 import com.learning.network.ApiOperation
 import com.learning.network.KtorClient
 import com.learning.network.models.domain.Character
-import com.learning.network.models.remote.toDomainCharacter
 import com.learning.rickandmorty.components.character.CharacterDetailsNamePlateComponent
+import com.learning.rickandmorty.components.character.CharacterGridItem
+import com.learning.rickandmorty.components.character.CharacterListItem
 import com.learning.rickandmorty.components.common.DataPoint
 import com.learning.rickandmorty.components.common.DataPointComponent
 import com.learning.rickandmorty.components.common.LoadingState
@@ -46,7 +49,6 @@ import com.learning.rickandmorty.ui.theme.RickAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -145,7 +147,7 @@ fun CharacterDetailsScreen(
 
     ) {
 
-        when(val viewState = state) {
+        when (val viewState = state) {
             is CharacterDetailsViewState.Loading -> {
                 item { LoadingState() }
             }
@@ -155,9 +157,47 @@ fun CharacterDetailsScreen(
 
                 }
             }
+
             is CharacterDetailsViewState.Success -> {
+
                 item {
-                    CharacterDetailsNamePlateComponent(name = viewState.character.name, status = viewState.character.status)
+                    LazyRow {
+                        repeat(10) {
+                            item {Spacer(Modifier.width(16.dp))}
+                            item {
+                                CharacterGridItem(
+                                    modifier = Modifier,
+                                    character = viewState.character
+                                ) {
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {  Spacer(Modifier.height(16.dp)) }
+
+                repeat(10) {
+                    item { Spacer(Modifier.height(16.dp)) }
+                    item {
+                        CharacterListItem(
+                            modifier = Modifier,
+                            character = viewState.character,
+                            characterDataPoints = viewState.characterDataPoint
+                        ) {
+                            
+                        }
+                    }
+                }
+
+                return@LazyColumn
+
+                item {
+                    CharacterDetailsNamePlateComponent(
+                        name = viewState.character.name,
+                        status = viewState.character.status
+                    )
                 }
 
                 item {
@@ -167,7 +207,8 @@ fun CharacterDetailsScreen(
                 // Image
                 item {
                     SubcomposeAsyncImage(
-                        model = viewState.character.imageUrl, contentDescription = "Character Image",
+                        model = viewState.character.imageUrl,
+                        contentDescription = "Character Image",
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
