@@ -4,6 +4,7 @@ import android.graphics.Paint
 import android.util.Log
 import android.widget.Space
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import com.learning.network.KtorClient
 import com.learning.network.models.domain.Character
 import com.learning.network.models.domain.Episode
 import com.learning.rickandmorty.components.character.CharacterDetailsNamePlateComponent
+import com.learning.rickandmorty.components.common.BasicToolBar
 import com.learning.rickandmorty.components.common.CharacterImage
 import com.learning.rickandmorty.components.common.CharacterNameComponent
 import com.learning.rickandmorty.components.common.DataPoint
@@ -44,7 +46,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 @Composable
-fun CharacterEpisodeScreen(characterId: Int, ktorClient: KtorClient) {
+fun CharacterEpisodeScreen(characterId: Int, ktorClient: KtorClient, onBackAction: () -> Unit) {
     var characterState by remember {
         mutableStateOf<Character?>(null)
     }
@@ -66,15 +68,17 @@ fun CharacterEpisodeScreen(characterId: Int, ktorClient: KtorClient) {
         }
     })
 
-    characterState?.let { character ->
-        MainScreen(character = character, episodes = episodesState)
+     characterState?.let { character ->
+        Column {
+            BasicToolBar(title = "All Episodes", onBackAction = onBackAction)
+            MainScreen(character = character, episodes = episodesState)
+        }
     } ?: LoadingState()
 }
 
 @Composable
 private fun MainScreen(character: Character, episodes: List<Episode>) {
     val episodeBySeasonMap = episodes.groupBy { it.seasonNumber }
-
     LazyColumn(contentPadding = PaddingValues(16.dp)) {
         item { CharacterNameComponent(name = character.name) }
         item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -97,7 +101,6 @@ private fun MainScreen(character: Character, episodes: List<Episode>) {
         item { CharacterImage(imageUrl = character.imageUrl) }
         item { Spacer(modifier = Modifier.height(32.dp)) }
 
-//        episodes.groupBy { it.seasonNumber }.
         episodeBySeasonMap.forEach { mapEntry ->
             item { SeasonHeader(seasonNumber = mapEntry.key) }
             items(mapEntry.value) { episode ->

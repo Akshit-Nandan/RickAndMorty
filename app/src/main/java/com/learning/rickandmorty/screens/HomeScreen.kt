@@ -1,6 +1,7 @@
 package com.learning.rickandmorty.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,6 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.learning.network.models.domain.Character
 import com.learning.network.models.domain.CharacterPage
 import com.learning.rickandmorty.components.character.CharacterGridItem
+import com.learning.rickandmorty.components.common.BasicToolBar
 import com.learning.rickandmorty.components.common.LoadingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,29 +41,30 @@ class HomeScreenViewModel @Inject constructor(
     private val fetchedCharacterPages = mutableListOf<CharacterPage>()
 
     fun fetchInitialPage() = viewModelScope.launch {
-        if(fetchedCharacterPages.isNotEmpty()) return@launch
+        if (fetchedCharacterPages.isNotEmpty()) return@launch
         repository.fetchCharacterPage(page = 0).onSuccess { characterPage ->
-                fetchedCharacterPages.add(characterPage)
-                _viewState.update {
-                    return@update HomeScreenViewState.GridDisplay(characters = characterPage.results)
-                }
-            }.onFailure {
-                // TODO
+            fetchedCharacterPages.add(characterPage)
+            _viewState.update {
+                 HomeScreenViewState.GridDisplay(characters = characterPage.results)
             }
+        }.onFailure {
+            // TODO
+        }
     }
 
-    fun fetchNextPage() = viewModelScope.launch{
+    fun fetchNextPage() = viewModelScope.launch {
         val nextPageIndex = fetchedCharacterPages.size + 1
-        fetchedCharacterPages.lastOrNull()?.let {lastPage ->
+        fetchedCharacterPages.lastOrNull()?.let { lastPage ->
             if (nextPageIndex > lastPage.info.pages)
                 return@launch
         }
         repository.fetchCharacterPage(page = nextPageIndex).onSuccess { characterPage ->
             fetchedCharacterPages.add(characterPage)
-            _viewState.update {currentState ->
-                val currentCharacters = (currentState as? HomeScreenViewState.GridDisplay)?.characters ?: emptyList()
+            _viewState.update { currentState ->
+                val currentCharacters =
+                    (currentState as? HomeScreenViewState.GridDisplay)?.characters ?: emptyList()
 
-                return@update HomeScreenViewState.GridDisplay(characters = currentCharacters + characterPage.results )
+                return@update HomeScreenViewState.GridDisplay(characters = currentCharacters + characterPage.results)
             }
         }.onFailure {
             // TODO
@@ -90,18 +93,20 @@ fun HomeScreen(
     }
 
     val scrollState = rememberLazyGridState()
-    val fetchNextPage : Boolean by remember {
+    val fetchNextPage: Boolean by remember {
         derivedStateOf {
-            val currentCharacterCount = (viewState as? HomeScreenViewState.GridDisplay)?.characters?.size ?:
-            return@derivedStateOf false
+            val currentCharacterCount =
+                (viewState as? HomeScreenViewState.GridDisplay)?.characters?.size
+                    ?: return@derivedStateOf false
 
-            val lastDisplayedIndex = scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
-            return@derivedStateOf currentCharacterCount-lastDisplayedIndex <= 10
+            val lastDisplayedIndex =
+                scrollState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+            return@derivedStateOf currentCharacterCount - lastDisplayedIndex <= 10
         }
     }
 
     LaunchedEffect(key1 = fetchNextPage, block = {
-        if(fetchNextPage) viewModel.fetchNextPage()
+        if (fetchNextPage) viewModel.fetchNextPage()
     })
 
     when (val state = viewState) {
@@ -110,15 +115,19 @@ fun HomeScreen(
         }
 
         is HomeScreenViewState.GridDisplay -> {
-            LazyVerticalGrid(
-                state = scrollState,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(16.dp),
-                columns = GridCells.Fixed(2)) {
-                items(items = state.characters, key = { it.hashCode() }) { character ->
-                    CharacterGridItem(modifier = Modifier, character = character) {
-                        onCharacterSelected(character.id)
+            Column {
+                BasicToolBar(title = "All Characters", onBackAction = null)
+                LazyVerticalGrid(
+                    state = scrollState,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(16.dp),
+                    columns = GridCells.Fixed(2)
+                ) {
+                    items(items = state.characters, key = { it.hashCode() }) { character ->
+                        CharacterGridItem(modifier = Modifier, character = character) {
+                            onCharacterSelected(character.id)
+                        }
                     }
                 }
             }

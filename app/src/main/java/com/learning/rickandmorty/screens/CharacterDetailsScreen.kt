@@ -2,6 +2,7 @@ package com.learning.rickandmorty.screens
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -31,6 +32,7 @@ import com.learning.network.KtorClient
 import com.learning.network.models.domain.Character
 import com.learning.network.models.domain.CharacterPage
 import com.learning.rickandmorty.components.character.CharacterDetailsNamePlateComponent
+import com.learning.rickandmorty.components.common.BasicToolBar
 import com.learning.rickandmorty.components.common.DataPoint
 import com.learning.rickandmorty.components.common.DataPointComponent
 import com.learning.rickandmorty.components.common.LoadingState
@@ -49,7 +51,7 @@ class CharacterRepository @Inject constructor(private val ktorClient: KtorClient
         return ktorClient.getCharacter(characterId)
     }
 
-    suspend fun fetchCharacterPage(page : Int ) : ApiOperation<CharacterPage> {
+    suspend fun fetchCharacterPage(page: Int): ApiOperation<CharacterPage> {
         return ktorClient.getCharacterByPage(pageNumber = page)
     }
 }
@@ -122,6 +124,7 @@ sealed interface CharacterDetailsViewState {
 fun CharacterDetailsScreen(
     characterId: Int,
     viewModel: CharacterDetailsViewModel = hiltViewModel(),
+    onBackAction: () -> Unit,
     onEpisodeClicked: (Int) -> Unit,
 ) {
 
@@ -132,79 +135,81 @@ fun CharacterDetailsScreen(
 
     val state by viewModel.state.collectAsState()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentPadding = PaddingValues(all = 16.dp)
+    Column {
+        BasicToolBar(title = "Character Details", onBackAction = onBackAction)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentPadding = PaddingValues(all = 16.dp)
 
-    ) {
+        ) {
 
-        when (val viewState = state) {
-            is CharacterDetailsViewState.Loading -> {
-                item { LoadingState() }
-            }
-
-            is CharacterDetailsViewState.Error -> {
-                item {
-
-                }
-            }
-
-            is CharacterDetailsViewState.Success -> {
-
-                item {
-                    CharacterDetailsNamePlateComponent(
-                        name = viewState.character.name,
-                        status = viewState.character.status
-                    )
+            when (val viewState = state) {
+                is CharacterDetailsViewState.Loading -> {
+                    item { LoadingState() }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
+                is CharacterDetailsViewState.Error -> {
+                    item {
+
+                    }
                 }
 
-                // Image
-                item {
-                    SubcomposeAsyncImage(
-                        model = viewState.character.imageUrl,
-                        contentDescription = "Character Image",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f)
-                            .clip(shape = RoundedCornerShape(12.dp)),
-                        loading = { LoadingState() }
-                    )
-                }
+                is CharacterDetailsViewState.Success -> {
+                    item {
+                        CharacterDetailsNamePlateComponent(
+                            name = viewState.character.name,
+                            status = viewState.character.status
+                        )
+                    }
 
-                items(viewState.characterDataPoint) {
-                    Spacer(modifier = Modifier.height(32.dp))
-                    DataPointComponent(dataPoint = it)
-                }
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
 
-                item {
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
+                    // Image
+                    item {
+                        SubcomposeAsyncImage(
+                            model = viewState.character.imageUrl,
+                            contentDescription = "Character Image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1f)
+                                .clip(shape = RoundedCornerShape(12.dp)),
+                            loading = { LoadingState() }
+                        )
+                    }
 
-                item {
-                    Text(
-                        text = "View all episodes",
-                        color = RickAction,
-                        fontSize = 18.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 32.dp)
-                            .border(
-                                width = 1.dp,
-                                color = RickAction,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                onEpisodeClicked(characterId)
-                            }
-                            .padding(vertical = 8.dp)
-                    )
+                    items(viewState.characterDataPoint) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        DataPointComponent(dataPoint = it)
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(32.dp))
+                    }
+
+                    item {
+                        Text(
+                            text = "View all episodes",
+                            color = RickAction,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = RickAction,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    onEpisodeClicked(characterId)
+                                }
+                                .padding(vertical = 8.dp)
+                        )
+                    }
                 }
             }
         }

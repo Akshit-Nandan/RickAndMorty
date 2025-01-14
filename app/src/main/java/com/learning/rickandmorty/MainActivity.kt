@@ -76,6 +76,9 @@ class MainActivity : ComponentActivity() {
                                 backStackEntry.arguments?.getInt("character_Id") ?: -1
                             CharacterDetailsScreen(
                                 characterId = characterId,
+                                onBackAction = {
+                                    navController.navigateUp()
+                                }
                             ) {
                                 navController.navigate("character_episodes/$it")
                             }
@@ -91,7 +94,9 @@ class MainActivity : ComponentActivity() {
                             CharacterEpisodeScreen(
                                 characterId = characterId,
                                 ktorClient = ktorClient
-                            )
+                            ) {
+                                navController.navigateUp()
+                            }
                         }
                     }
 //                    CharacterDetailsScreen(ktorClient = ktorClient, characterId = 1)
