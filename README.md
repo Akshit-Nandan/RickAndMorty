@@ -29,11 +29,10 @@ The app is built with a focus on scalability and clean code principles, employin
 - **Modularization**: Separates features into independent modules to enhance maintainability and reusability.
 
 ## Screenshots
-![Character List Screen](![image](https://github.com/user-attachments/assets/a10bec6f-cc33-4f4f-b5af-3f756dec0863)
-)  
-![Character Details Screen]![image](https://github.com/user-attachments/assets/a38b1cdf-cbba-4d4b-a281-c3b7626d352b)
- 
-![Episode Details Screen]![image](https://github.com/user-attachments/assets/e385f591-f9d3-42a9-a25c-1d2136853c57)
+
+![image](https://github.com/user-attachments/assets/a10bec6f-cc33-4f4f-b5af-3f756dec0863)
+ ![image](https://github.com/user-attachments/assets/a38b1cdf-cbba-4d4b-a281-c3b7626d352b)
+ ![image](https://github.com/user-attachments/assets/e385f591-f9d3-42a9-a25c-1d2136853c57)
  
 <!-- Replace with actual screenshots -->
 
