@@ -4,12 +4,15 @@ import android.util.Log
 import com.learning.network.models.domain.Character
 import com.learning.network.models.domain.CharacterPage
 import com.learning.network.models.domain.Episode
+import com.learning.network.models.domain.EpisodePage
 import com.learning.network.models.remote.RemoteCharacter
 import com.learning.network.models.remote.RemoteCharacterPage
 import com.learning.network.models.remote.RemoteEpisode
+import com.learning.network.models.remote.RemoteEpisodePage
 import com.learning.network.models.remote.toDomainCharacter
 import com.learning.network.models.remote.toDomainCharacterPage
 import com.learning.network.models.remote.toDomainEpisode
+import com.learning.network.models.remote.toDomainEpisodePage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
@@ -60,7 +63,42 @@ class KtorClient {
         }
     }
 
-    suspend fun getCharacterByPage(pageNumber : Int) : ApiOperation<CharacterPage> {
+    private suspend fun getEpisodesByPage(pageId: Int): ApiOperation<EpisodePage> {
+        return safeApiCall<EpisodePage> {
+            client.get(urlString = "episode", block = {
+                url {
+                    parameters.append("page", pageId.toString())
+                }
+            }).body<RemoteEpisodePage>().toDomainEpisodePage()
+        }
+    }
+
+    suspend fun getAllEpisodes(): ApiOperation<List<Episode>> {
+        val data = mutableListOf<Episode>()
+        var exception: Exception? = null
+
+        getEpisodesByPage(pageId = 1).onSuccess { firstPageResult ->
+            val totalPage = firstPageResult.info.pages
+            data.addAll(firstPageResult.results)
+            repeat(totalPage - 1) { id ->
+                getEpisodesByPage(pageId = id + 2).onSuccess { nextPage ->
+                    data.addAll(nextPage.results)
+                }.onFailure {
+                    exception = it
+                }
+                if (exception != null) return@onSuccess
+            }
+        }.onFailure {
+            exception = it
+        }
+
+        return exception?.let {
+            ApiOperation.Failure<List<Episode>>(exception = it)
+        } ?: ApiOperation.Success<List<Episode>>(data = data)
+
+    }
+
+    suspend fun getCharacterByPage(pageNumber: Int): ApiOperation<CharacterPage> {
         return safeApiCall {
             client
                 .get("character/?page=$pageNumber")
@@ -82,7 +120,7 @@ sealed interface ApiOperation<T> {
     data class Success<T>(val data: T) : ApiOperation<T>
     data class Failure<T>(val exception: Exception) : ApiOperation<T>
 
-    fun onSuccess(block: (T) -> Unit): ApiOperation<T> {
+    suspend fun onSuccess(block: suspend (T) -> Unit): ApiOperation<T> {
         if (this is Success) block(data)
         return this
     }

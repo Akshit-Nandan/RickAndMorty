@@ -3,6 +3,8 @@ package com.learning.rickandmorty.screens
 import android.graphics.Paint
 import android.util.Log
 import android.widget.Space
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,6 +43,7 @@ import com.learning.rickandmorty.components.common.DataPointComponent
 import com.learning.rickandmorty.components.common.LoadingState
 import com.learning.rickandmorty.components.episode.EpisodeRowComponent
 import com.learning.rickandmorty.ui.theme.RickAction
+import com.learning.rickandmorty.ui.theme.RickPrimary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -68,7 +71,7 @@ fun CharacterEpisodeScreen(characterId: Int, ktorClient: KtorClient, onBackActio
         }
     })
 
-     characterState?.let { character ->
+    characterState?.let { character ->
         Column {
             BasicToolBar(title = "All Episodes", onBackAction = onBackAction)
             MainScreen(character = character, episodes = episodesState)
@@ -76,6 +79,7 @@ fun CharacterEpisodeScreen(characterId: Int, ktorClient: KtorClient, onBackActio
     } ?: LoadingState()
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun MainScreen(character: Character, episodes: List<Episode>) {
     val episodeBySeasonMap = episodes.groupBy { it.seasonNumber }
@@ -84,17 +88,23 @@ private fun MainScreen(character: Character, episodes: List<Episode>) {
         item { Spacer(modifier = Modifier.height(16.dp)) }
         item {
             LazyRow {
-                episodeBySeasonMap.forEach({ mapEntry ->
+                episodeBySeasonMap.forEach { mapEntry ->
                     item {
-                        DataPointComponent(
-                            dataPoint = DataPoint(
-                                title = "Season ${mapEntry.key}",
-                                description = "${mapEntry.value.size} ep"
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = RickPrimary),
+                        ) {
+                            DataPointComponent(
+                                dataPoint = DataPoint(
+                                    title = "Season ${mapEntry.key}",
+                                    description = "${mapEntry.value.size} ep"
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
+                        }
                     }
-                })
+                }
             }
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -102,7 +112,13 @@ private fun MainScreen(character: Character, episodes: List<Episode>) {
         item { Spacer(modifier = Modifier.height(32.dp)) }
 
         episodeBySeasonMap.forEach { mapEntry ->
-            item { SeasonHeader(seasonNumber = mapEntry.key) }
+            stickyHeader(key = mapEntry.key) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().background(color = RickPrimary)
+                ) {
+                    SeasonHeader(seasonNumber = mapEntry.key)
+                }
+            }
             items(mapEntry.value) { episode ->
                 EpisodeRowComponent(episode = episode)
             }

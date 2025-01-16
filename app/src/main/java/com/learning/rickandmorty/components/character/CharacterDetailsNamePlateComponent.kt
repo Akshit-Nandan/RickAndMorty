@@ -22,6 +22,7 @@ fun CharacterDetailsNamePlateComponent(name: String, status: CharacterStatus) {
         Text(
             text = name,
             fontSize = 42.sp,
+            lineHeight = 42.sp,
             fontWeight = FontWeight.Bold,
             color = RickAction
         )
