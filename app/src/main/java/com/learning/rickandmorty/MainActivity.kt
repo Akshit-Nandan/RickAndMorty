@@ -30,7 +30,6 @@ import androidx.navigation.navArgument
 
 
 import com.learning.network.KtorClient
-import com.learning.network.Test
 import com.learning.rickandmorty.screens.CharacterDetailsScreen
 import com.learning.rickandmorty.screens.CharacterEpisodeScreen
 import com.learning.rickandmorty.screens.HomeScreen
