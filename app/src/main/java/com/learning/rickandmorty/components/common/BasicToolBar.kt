@@ -28,7 +28,7 @@ import com.learning.rickandmorty.ui.theme.RickPrimary
 import com.learning.rickandmorty.ui.theme.RickTextPrimary
 
 @Composable
-fun BasicToolBar(title: String, onBackAction: (() -> Unit)?) {
+fun BasicToolBar(title: String, onBackAction: (() -> Unit)? = null) {
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -57,6 +57,7 @@ import com.learning.rickandmorty.screens.AllEpisodesScreen
 import com.learning.rickandmorty.screens.CharacterDetailsScreen
 import com.learning.rickandmorty.screens.CharacterEpisodeScreen
 import com.learning.rickandmorty.screens.HomeScreen
+import com.learning.rickandmorty.screens.SearchScreen
 import com.learning.rickandmorty.ui.theme.RickAction
 import com.learning.rickandmorty.ui.theme.RickAndMortyTheme
 import com.learning.rickandmorty.ui.theme.RickPrimary
@@ -194,7 +195,11 @@ class MainActivity : ComponentActivity() {
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text(text = "Search", fontSize = 62.sp, color = Color.White)
+                                SearchScreen(
+                                    onCharacterClick = {
+                                        navController.navigate("character_episodes/$it")
+                                    }
+                                )
                             }
                         }
                     }

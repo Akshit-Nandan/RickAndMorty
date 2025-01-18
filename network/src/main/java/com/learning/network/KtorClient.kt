@@ -22,6 +22,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -98,13 +99,48 @@ class KtorClient {
 
     }
 
-    suspend fun getCharacterByPage(pageNumber: Int): ApiOperation<CharacterPage> {
+    suspend fun getCharacterByPage(
+        pageNumber: Int,
+        queryParams: Map<String, String>,
+    ): ApiOperation<CharacterPage> {
         return safeApiCall {
             client
-                .get("character/?page=$pageNumber")
+                .get(urlString = "character") {
+                    url {
+                        parameters.append("page", pageNumber.toString())
+                        queryParams.forEach { mapEntry ->
+                            parameters.append(mapEntry.key, mapEntry.value)
+                        }
+                    }
+                }
                 .body<RemoteCharacterPage>()
                 .toDomainCharacterPage()
         }
+    }
+
+    suspend fun getAllCharactersByName(searchQuery : String): ApiOperation<List<Character>> {
+        val data = mutableListOf<Character>()
+        var exception: Exception? = null
+
+        getCharacterByPage(pageNumber = 1, queryParams = mapOf("name" to searchQuery)).onSuccess { firstPageResult ->
+            val totalPage = firstPageResult.info.pages
+            data.addAll(firstPageResult.results)
+            repeat(totalPage - 1) { id ->
+                getCharacterByPage(pageNumber = id + 2, queryParams = mapOf("name" to searchQuery)).onSuccess { nextPage ->
+                    data.addAll(nextPage.results)
+                }.onFailure {
+                    exception = it
+                }
+                if (exception != null) return@onSuccess
+            }
+        }.onFailure {
+            exception = it
+        }
+
+        return exception?.let {
+            ApiOperation.Failure<List<Character>>(exception = it)
+        } ?: ApiOperation.Success<List<Character>>(data = data)
+
     }
 
     private inline fun <T> safeApiCall(apiCall: () -> T): ApiOperation<T> {
