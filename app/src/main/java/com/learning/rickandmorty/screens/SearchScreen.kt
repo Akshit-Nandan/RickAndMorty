@@ -2,6 +2,7 @@ package com.learning.rickandmorty.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItemDefaults.contentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -37,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -49,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.learning.network.models.domain.Character
 import com.learning.network.models.domain.CharacterPage
+import com.learning.network.models.domain.CharacterStatus
 import com.learning.rickandmorty.components.character.CharacterListItem
 import com.learning.rickandmorty.components.common.BasicToolBar
 import com.learning.rickandmorty.components.common.DataPoint
@@ -78,11 +82,16 @@ sealed interface SearchScreenViewState {
     data class Content(
         val userQuery: String,
         val results: List<Character>,
-    ) : SearchScreenViewState
+        val filterState: FilterState,
+    ) : SearchScreenViewState {
+        data class FilterState(
+            val statuses: List<CharacterStatus>,
+            val selectedStatuses: List<CharacterStatus>,
+        )
+    }
 
     data class Error(val message: String) : SearchScreenViewState
 }
-
 
 
 @HiltViewModel
@@ -101,14 +110,37 @@ class SearchViewModel @Inject constructor(
         MutableStateFlow<SearchScreenViewState>(SearchScreenViewState.Error("Nothing Found"))
     val viewState = _viewState.asStateFlow()
 
+    fun toggleStatus(status: CharacterStatus) {
+        _viewState.update {
+            val currentState = (it as? SearchScreenViewState.Content) ?: return@update it
+            val currentSelectedStatuses = currentState.filterState.selectedStatuses
+            val newStatuses = if (currentSelectedStatuses.contains(status)) {
+                currentSelectedStatuses - status
+            } else {
+                currentSelectedStatuses + status
+            }
+            return@update currentState.copy(
+                filterState = currentState.filterState.copy(
+                    selectedStatuses = newStatuses
+                )
+            )
+        }
+    }
 
     private fun searchAllCharacters(searchQuery: String) = viewModelScope.launch {
         _viewState.update { SearchScreenViewState.Searching }
         characterRepository.fetchAllCharactersByName(searchQuery = searchQuery)
             .onSuccess { characters ->
+                val allStatuses =
+                    characters.map { it.status }.toSet().toList().sortedBy { it.displayName }
                 _viewState.update {
                     SearchScreenViewState.Content(
-                        results = characters, userQuery = searchQuery
+                        results = characters,
+                        userQuery = searchQuery,
+                        filterState = SearchScreenViewState.Content.FilterState(
+                            statuses = allStatuses,
+                            selectedStatuses = allStatuses
+                        )
                     )
                 }
             }.onFailure { exception ->
@@ -125,14 +157,14 @@ class SearchViewModel @Inject constructor(
     val searchTextState: StateFlow<SearchState> = snapshotFlow {
         searchTextFieldState.text
     }.debounce(200).mapLatest { value ->
-            if (value.isBlank()) SearchState.Empty else SearchState.UserQuery(
-                query = value.toString()
-            )
-        }.stateIn(
-            initialValue = SearchState.Empty,
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 2000)
+        if (value.isBlank()) SearchState.Empty else SearchState.UserQuery(
+            query = value.toString()
         )
+    }.stateIn(
+        initialValue = SearchState.Empty,
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 2000)
+    )
 
     fun observerUserSearch() = viewModelScope.launch {
         searchTextState.collectLatest { searchState ->
@@ -234,12 +266,50 @@ fun SearchScreen(
                     Text(
                         text = "${state.results.size} results for \'${state.userQuery}\'",
                         color = Color.White,
-                        fontSize = 22.sp,
+                        fontSize = 14.sp,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(6.dp),
-                        textAlign = TextAlign.Center,
+                            .padding(start = 16.dp, bottom = 4.dp)
                     )
+                    Row (
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ){
+                        state.filterState.statuses.forEach { status ->
+                            val isSelected = state.filterState.selectedStatuses.contains(status)
+                            val contentColor = if (isSelected) RickAction else Color.LightGray
+                            val count = state.results.count { it.status === status }
+                            Row(
+                                modifier = Modifier
+                                    .border(
+                                        width = 1.dp,
+                                        color = contentColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable {
+                                        searchViewModel.toggleStatus(status)
+                                    }
+                                    .clip(RoundedCornerShape(8.dp))
+
+                            ) {
+                                Text(
+                                    text = "$count",
+                                    modifier = Modifier
+                                        .background(color = contentColor)
+                                        .padding(6.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = status.displayName,
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .padding(6.dp),
+                                    textAlign = TextAlign.Center,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
                     Box {
                         LazyColumn(
                             modifier = Modifier.fillMaxWidth(),
@@ -249,10 +319,14 @@ fun SearchScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            items(items = state.results) { character ->
+                            val filteredResult = state.results.filter {
+                                state.filterState.selectedStatuses.contains(it.status)
+                            }
+                            items(items = filteredResult) { character ->
                                 CharacterListItem(
                                     modifier = Modifier
-                                        .padding(vertical = 4.dp, horizontal = 8.dp),
+                                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                                        .animateItem(),
                                     character = character,
                                     characterDataPoints = buildList {
                                         add(
@@ -308,8 +382,9 @@ fun SearchScreen(
                     }
                 }
             }
+
             is SearchScreenViewState.Error -> {
-                Column{
+                Column {
                     Text(
                         text = state.message,
                         color = Color.White,
