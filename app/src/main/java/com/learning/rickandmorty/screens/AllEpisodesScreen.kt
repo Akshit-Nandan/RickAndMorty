@@ -102,9 +102,7 @@ fun AllEpisodesScreen(
         }
 
         is AllEpisodesViewState.Success -> {
-            BasicToolBar(title = "All Episodes") {
-                
-            }
+            BasicToolBar(title = "All Episodes")
             LazyColumn(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),

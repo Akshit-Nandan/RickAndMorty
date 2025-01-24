@@ -73,7 +73,7 @@ fun CharacterEpisodeScreen(characterId: Int, ktorClient: KtorClient, onBackActio
 
     characterState?.let { character ->
         Column {
-            BasicToolBar(title = "All Episodes", onBackAction = onBackAction)
+            BasicToolBar(title = "Character Episodes", onBackAction = onBackAction)
             MainScreen(character = character, episodes = episodesState)
         }
     } ?: LoadingState()

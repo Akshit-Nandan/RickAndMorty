@@ -1,5 +1,6 @@
 package com.learning.rickandmorty.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,6 +63,8 @@ import com.learning.rickandmorty.ui.theme.RickPrimary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -75,6 +78,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import javax.inject.Inject
+
 
 sealed interface SearchScreenViewState {
     data object Searching : SearchScreenViewState
@@ -99,6 +103,9 @@ class SearchViewModel @Inject constructor(
     private val characterRepository: CharacterRepository,
 ) : ViewModel() {
 
+    private val TAG = "SearchQuery"
+
+    private var searchQueryJob : Job? = null
     sealed interface SearchState {
         data class UserQuery(val query: String) : SearchState
         data object Empty : SearchState
@@ -131,6 +138,7 @@ class SearchViewModel @Inject constructor(
         _viewState.update { SearchScreenViewState.Searching }
         characterRepository.fetchAllCharactersByName(searchQuery = searchQuery)
             .onSuccess { characters ->
+                Log.d(TAG,"Updating the content for $searchQuery")
                 val allStatuses =
                     characters.map { it.status }.toSet().toList().sortedBy { it.displayName }
                 _viewState.update {
@@ -156,7 +164,7 @@ class SearchViewModel @Inject constructor(
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val searchTextState: StateFlow<SearchState> = snapshotFlow {
         searchTextFieldState.text
-    }.debounce(200).mapLatest { value ->
+    }.debounce(500).mapLatest { value ->
         if (value.isBlank()) SearchState.Empty else SearchState.UserQuery(
             query = value.toString()
         )
@@ -168,9 +176,16 @@ class SearchViewModel @Inject constructor(
 
     fun observerUserSearch() = viewModelScope.launch {
         searchTextState.collectLatest { searchState ->
+            searchQueryJob?.cancelAndJoin()
             when (searchState) {
-                is SearchState.Empty -> _viewState.update { SearchScreenViewState.Empty }
-                is SearchState.UserQuery -> searchAllCharacters(searchQuery = searchState.query)
+                is SearchState.Empty -> {
+                    _viewState.update { SearchScreenViewState.Empty }
+                    Log.d(TAG,"Search query is empty")
+                }
+                is SearchState.UserQuery -> {
+                    searchQueryJob = searchAllCharacters(searchQuery = searchState.query)
+                    Log.d(TAG,"Searching for query ${searchState.query}")
+                }
             }
         }
     }
