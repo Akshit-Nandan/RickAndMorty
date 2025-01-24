@@ -5,7 +5,10 @@ The **Rick and Morty Android App** is a modern, feature-rich application that al
 
 ## Features
 - **Character Browser**: View detailed information about your favorite characters.
+- **Character's episodes**: Get information about episodes in which a particular character appeared.
 - **Episode Guide**: Discover episodes and their details.
+- **Search Functionality**: Search for characters by name.
+- **Filter Options**: Filter searched characters by their status: alive, dead, or unknown.
 
 ## Tech Stack
 This project leverages the latest Android development technologies to ensure scalability, maintainability, and performance:
@@ -18,9 +21,9 @@ This project leverages the latest Android development technologies to ensure sca
 
 ### **Other Technologies**
 - **Ktor**: For seamless API integration.
+- **Coid**: For loading images API integration.
 - **Coroutines and Flow**: For efficient and asynchronous programming.
 - **Jetpack Navigation**: Simplifies navigation and deep linking across the app.
-- **Room Database**: Provides offline support and efficient data storage.
 
 
 ## Architecture
@@ -30,10 +33,13 @@ The app is built with a focus on scalability and clean code principles, employin
 
 ## Screenshots
 
-![image](https://github.com/user-attachments/assets/a10bec6f-cc33-4f4f-b5af-3f756dec0863)
- ![image](https://github.com/user-attachments/assets/a38b1cdf-cbba-4d4b-a281-c3b7626d352b)
- ![image](https://github.com/user-attachments/assets/e385f591-f9d3-42a9-a25c-1d2136853c57)
- 
+| <img src="https://github.com/user-attachments/assets/7f750b1d-1b3d-4af7-8943-feed5c3837c9" alt="Image 1" width="600"> | <img src="https://github.com/user-attachments/assets/5483c8e5-4129-4db1-8054-93e5719ac23e" alt="Image 2" width="450"> |
+|---------------------------|----------------------------------|
+| <img src="https://github.com/user-attachments/assets/d04afb37-10be-4ecd-b59c-2d67c31ceeb9" alt="Image 3" width="400"> | <img src="https://github.com/user-attachments/assets/ecab56f1-c5c1-4110-9ec9-d4ed49bd784d" alt="Image 4" width="900"> |
+|--------------------------------|-----------------------------------|
+| <img src="https://github.com/user-attachments/assets/c330043e-afd1-4027-8b33-ffc4300f7e26" alt="Image 5" width="500"> | <img src="https://github.com/user-attachments/assets/12b4e8b1-7233-4f14-a028-384f9b493921" alt="Image 6" width="400"> |
+
+
 <!-- Replace with actual screenshots -->
 
 ## Setup Instructions
